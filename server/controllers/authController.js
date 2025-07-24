@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/usermodel.js'
+import transporter from '../config/nodemailer.js'
 
 export const register = async (req ,res) =>{
     
@@ -32,13 +33,31 @@ export const register = async (req ,res) =>{
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
 
+        //sending welcome email
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: 'Welcome to CodeAcademy',
+            text: `Welcome to Code Academy Website. Your Account has been created with email id: ${email}`
+        }
+
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Email sent:" , info.response); // optional print the responce
+        }
+
+        catch(err) {
+            console.error("Email failed" , err);
+        }
+
         return res.json({success: true});
+
     } catch (error){
         res.json({success: false ,  message : error.message} );
     }
 }
 
-export const login = async ()=>{
+export const login = async (req, res)=>{
     const {email , password} = req.body;
 
     if(!email || !password){
